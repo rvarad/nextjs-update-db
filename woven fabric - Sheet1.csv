@@ -1,0 +1,11 @@
+si no ,count ,material ,reed / pick ,width ,weave ,gsm ,weight / mtr,price / mtr,SUPPLIER
+1,10's x 10's,cotton ,50 x 50 ,"60""",plain ,120,200, ₹  60.00 ,KPR
+2,,cotton ,,,,,,,PSM
+3,,cotton ,,,,,,,
+4,,cotton ,,,,,,,
+5,,cotton ,,,,,,,
+6,,cotton ,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+"IF COLUMN B,C,D,E,F,G,J MATCH UPDATE PRICE AND WEIGHT",,,,,,,,,
