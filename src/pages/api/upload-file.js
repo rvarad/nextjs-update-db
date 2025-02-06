@@ -25,18 +25,25 @@ export default async function handler(req, res) {
 		fs.writeFileSync(tempFilePath, buffer)
 
 		const results = []
+		const uniqueResults = new Set()
 
 		fs.createReadStream(tempFilePath)
 			.pipe(csvParser())
 			.on("data", (row) => {
-				results.push(row)
+				const uniqueRow = row
+				delete uniqueRow["si no"]
+				const stringifiedRow = JSON.stringify(uniqueRow)
+				if (!uniqueResults.has(stringifiedRow)) {
+					uniqueResults.add(stringifiedRow)
+					results.push(row)
+				}
 				// console.log("row : ", row)
 			})
 			.on("end", async () => {
+				console.log("results : ", results)
+
 				const snapshot = await db.ref("knits").once("value")
 				const knitsData = snapshot.val()
-
-				console.log("knitsData: ", knitsData)
 
 				let updates = {}
 				let newRecords = []
@@ -45,7 +52,7 @@ export default async function handler(req, res) {
 					const { count, material, quality, supplier, price } = row
 					let recordFound = false
 
-					// verify if all the feilds are filled, if not return error and stop the loop
+					// verify if all the feilds are filled, if not, return error and stop the loop
 					if (!count || !material || !quality || !supplier || !price) {
 						fs.unlinkSync(tempFilePath)
 						return res
@@ -64,28 +71,26 @@ export default async function handler(req, res) {
 							if (data.price !== price) {
 								updates[`knits/${id}/price`] = price
 							}
-							console.log("record found: ", data)
 						}
 					})
 
 					if (!recordFound) {
-						console.log("no record found: ", row)
-						const newRecordRef = db.ref("knits").push()
+						// const newRecordRef = db.ref("knits").push()
 						newRecords.push({
-							id: newRecordRef.key,
+							// id: newRecordRef.key,
 							count,
 							material,
 							quality,
 							supplier,
 							price,
 						})
-						newRecordRef.set({ count, material, quality, supplier, price })
+						// newRecordRef.set({ count, material, quality, supplier, price })
 					}
 				}
 
-				if (Object.keys(updates).length > 0) {
-					await db.ref().update(updates)
-				}
+				// if (Object.keys(updates).length > 0) {
+				// 	await db.ref().update(updates)
+				// }
 
 				// console.log("results : ", results)
 

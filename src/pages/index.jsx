@@ -30,7 +30,7 @@ export default function Home() {
 			})
 
 			const result = await response.json()
-			console.log(result)
+			console.log(result.data["newRecords"])
 			setData(result.data)
 		} catch (error) {
 			console.log("error", error)
