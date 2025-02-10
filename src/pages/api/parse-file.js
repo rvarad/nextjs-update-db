@@ -39,7 +39,7 @@ export default async function handler(req, res) {
 		// 3) store the duplicates in a new obj.
 		// 4) newly added
 		// 5) updated
-		// 6) Ones with the error.(only show these  back to the user).
+		// 6) Ones with the error.(only show these back to the user).
 
 		// all error checks are done: then store the data under (knits/tempData/userId)
 
@@ -81,27 +81,19 @@ export default async function handler(req, res) {
 				}
 			})
 			.on("end", async () => {
-				if (emptyResults.length > 0) {
+				if (
+					emptyResults.length > 0 ||
+					erronousResults.length > 0 ||
+					duplicateResults.length > 0
+				) {
 					fs.unlinkSync(tempFilePath)
 					return res.status(400).json({
-						message: "Empty feilds found",
-						data: emptyResults,
-					})
-				}
-
-				if (duplicateResults.length > 0) {
-					fs.unlinkSync(tempFilePath)
-					return res.status(400).json({
-						message: "Duplicates found",
-						data: duplicateResults,
-					})
-				}
-
-				if (erronousResults.length > 0) {
-					fs.unlinkSync(tempFilePath)
-					return res.status(400).json({
-						message: "Erronous records found",
-						data: erronousResults,
+						message: "file contains errors",
+						data: {
+							duplicateResults,
+							erronousResults,
+							emptyResults,
+						},
 					})
 				}
 
