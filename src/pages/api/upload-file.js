@@ -1,4 +1,3 @@
-import fs from "fs"
 import { db } from "@/lib/firebase/firebase-admin/adminAppConfig"
 
 export default async function handler(req, res) {
@@ -9,23 +8,23 @@ export default async function handler(req, res) {
 	try {
 		const data = req.body
 
-		const snapshot = await db.ref("knits").once("value")
-		const knitsData = snapshot.val()
+		const snapshot = await db.ref("knits").get()
+		const { newRecords, updates } = snapshot.val()["tempData"]["userId"]
 
-		if (Object.keys(data.updates).length > 0) {
-			await db.ref().update(data.updates)
+		if (updates && Object.keys(updates).length > 0) {
+			await db.ref().update(updates)
 		}
 
-		for (const record of data.newRecords) {
-			const { count, material, quality, supplier, price } = record
-			const newRecordRef = db.ref("knits").push()
-			record.id = newRecordRef.key
-			await newRecordRef.set({ count, material, quality, supplier, price })
+		if (newRecords) {
+			for (const record of newRecords) {
+				const { count, material, quality, supplier, price } = record
+				const newRecordRef = db.ref("knits").push()
+				record.id = newRecordRef.key
+				await newRecordRef.set({ count, material, quality, supplier, price })
+			}
 		}
 
-		// upload to storage bucket
-
-		fs.unlinkSync(data.tempFilePath)
+		await db.ref("knits/tempData/userId").set(null)
 
 		return res.status(200).json({
 			message: "File uploaded successfully",

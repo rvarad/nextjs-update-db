@@ -96,7 +96,6 @@ export default function Home() {
 				<p>Data: {JSON.stringify(data)}</p>
 				{/* Fetch the data and display it here */}
 			</div>
-			{/* Below part can be extracted into a separate component(that's my personal preference) */}
 			{parsedData && (
 				<div>
 					<h3>Confirm your input data</h3>
@@ -106,7 +105,7 @@ export default function Home() {
 					<p>
 						<em>Updates: </em> {JSON.stringify(data["updates"])} */}
 						<span>Message: {JSON.stringify(parsedData.message)}</span>
-						Parsed Data: {JSON.stringify(parsedData.data)}
+						<span>Parsed Data: {JSON.stringify(parsedData.data)}</span>
 						{/* Parsed Data: {JSON.stringify(parsedData)} */}
 					</p>
 					<div>

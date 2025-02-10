@@ -46,7 +46,7 @@ export default async function handler(req, res) {
 		fs.createReadStream(tempFilePath)
 			.pipe(csvParser())
 			.on("data", (row) => {
-				console.log("row : ", row)
+				// console.log("row : ", row)
 				// const uniqueRow = row
 				// delete uniqueRow["si no"]
 				// const stringifiedRow = JSON.stringify(uniqueRow)
@@ -64,18 +64,18 @@ export default async function handler(req, res) {
 				) {
 					emptyResults.push(row)
 				} else {
-					const uniqueRow = row
+					const uniqueRow = { ...row }
 					delete uniqueRow["si no"]
 					const searchKey = `${uniqueRow.count}_${uniqueRow.material}_${uniqueRow.quality}_${uniqueRow.supplier}`
 
 					if (uniqueResults.has(searchKey)) {
-						if (uniqueResults.get(searchKey) === row.price) {
+						if (uniqueResults.get(searchKey) === row["price"]) {
 							duplicateResults.push(row)
 						} else {
 							erronousResults.push(row)
 						}
 					} else {
-						uniqueResults.set(searchKey, row.price)
+						uniqueResults.set(searchKey, row["price"])
 						results.push(row)
 					}
 				}
@@ -133,13 +133,15 @@ export default async function handler(req, res) {
 					}
 				}
 
+				await db.ref(`knits/tempData/userId`).set({ updates, newRecords })
+
 				// TODO: upload file to storage bucket
 
 				fs.unlinkSync(tempFilePath)
 
 				return res.status(200).json({
 					message: "File uploaded successfully",
-					data: { newRecords, updates, tempFilePath },
+					data: { newRecords, updates },
 				})
 			})
 	} catch (error) {

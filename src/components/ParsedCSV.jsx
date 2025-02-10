@@ -1,7 +1,7 @@
 import { useState } from "react"
 
-function ParsedCSV({ data }) {
-	const [parsedData, setParsedData] = useState(null)
+function ParsedCSV({ data, handleFileUpload }) {
+	// const [parsedData, setParsedData] = useState(null)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState(null)
 
@@ -13,8 +13,8 @@ function ParsedCSV({ data }) {
 					</p>
 					<p>
 						<em>Updates: </em> {JSON.stringify(data["updates"])} */}
-				<span>Message: {JSON.stringify(parsedData.message)}</span>
-				Parsed Data: {JSON.stringify(parsedData.data)}
+				<span>Message: {JSON.stringify(data.message)}</span>
+				<span>Parsed Data: {JSON.stringify(data.data)}</span>
 			</p>
 			<div>
 				<button
