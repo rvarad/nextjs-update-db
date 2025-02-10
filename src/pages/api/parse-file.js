@@ -29,21 +29,82 @@ export default async function handler(req, res) {
 		fs.writeFileSync(tempFilePath, buffer)
 
 		const results = []
-		const uniqueResults = new Set()
+		const uniqueResults = new Map()
+		const duplicateResults = []
+		const erronousResults = []
+		const emptyResults = []
+		// Evauluation pre firebase:
+		// 1) remove duplicates, but store the original record
+		// 2) check if all records are unique, if not, highlight the erronous ones
+		// 3) store the duplicates in a new obj.
+		// 4) newly added
+		// 5) updated
+		// 6) Ones with the error.(only show these  back to the user).
+
+		// all error checks are done: then store the data under (knits/tempData/userId)
 
 		fs.createReadStream(tempFilePath)
 			.pipe(csvParser())
 			.on("data", (row) => {
 				console.log("row : ", row)
-				const uniqueRow = row
-				delete uniqueRow["si no"]
-				const stringifiedRow = JSON.stringify(uniqueRow)
-				if (!uniqueResults.has(stringifiedRow)) {
-					uniqueResults.add(stringifiedRow)
-					results.push(row)
+				// const uniqueRow = row
+				// delete uniqueRow["si no"]
+				// const stringifiedRow = JSON.stringify(uniqueRow)
+				// if (!uniqueResults.has(stringifiedRow)) {
+				// 	uniqueResults.add(stringifiedRow)
+				// 	results.push(row)
+				// }
+
+				if (
+					!row.count ||
+					!row.material ||
+					!row.quality ||
+					!row.supplier ||
+					!row.price
+				) {
+					emptyResults.push(row)
+				} else {
+					const uniqueRow = row
+					delete uniqueRow["si no"]
+					const searchKey = `${uniqueRow.count}_${uniqueRow.material}_${uniqueRow.quality}_${uniqueRow.supplier}`
+
+					if (uniqueResults.has(searchKey)) {
+						if (uniqueResults.get(searchKey) === row.price) {
+							duplicateResults.push(row)
+						} else {
+							erronousResults.push(row)
+						}
+					} else {
+						uniqueResults.set(searchKey, row.price)
+						results.push(row)
+					}
 				}
 			})
 			.on("end", async () => {
+				if (emptyResults.length > 0) {
+					fs.unlinkSync(tempFilePath)
+					return res.status(400).json({
+						message: "Empty feilds found",
+						data: emptyResults,
+					})
+				}
+
+				if (duplicateResults.length > 0) {
+					fs.unlinkSync(tempFilePath)
+					return res.status(400).json({
+						message: "Duplicates found",
+						data: duplicateResults,
+					})
+				}
+
+				if (erronousResults.length > 0) {
+					fs.unlinkSync(tempFilePath)
+					return res.status(400).json({
+						message: "Erronous records found",
+						data: erronousResults,
+					})
+				}
+
 				const snapshot = await db.ref("knits").once("value")
 				const knitsData = snapshot.val()
 
@@ -53,14 +114,6 @@ export default async function handler(req, res) {
 				for (const row of results) {
 					const { count, material, quality, supplier, price } = row
 					let recordFound = false
-
-					// verify if all the feilds are filled, if not, return error and stop the loop
-					if (!count || !material || !quality || !supplier || !price) {
-						fs.unlinkSync(tempFilePath)
-						return res
-							.status(400)
-							.json({ message: "Please fill all the fields", data: row })
-					}
 
 					Object.entries(knitsData).forEach(([id, data]) => {
 						if (
@@ -83,9 +136,15 @@ export default async function handler(req, res) {
 							quality,
 							supplier,
 							price,
+							// serchKey: `${count}_${material}_${quality}_${supplier}`,
 						})
 					}
 				}
+
+				// TODO: upload file to storage bucket
+
+				fs.unlinkSync(tempFilePath)
+
 				return res.status(200).json({
 					message: "File uploaded successfully",
 					data: { newRecords, updates, tempFilePath },

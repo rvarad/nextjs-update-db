@@ -64,7 +64,7 @@ export default function Home() {
 
 			const result = await response.json()
 			console.log(result.data)
-			setParsedData(result.data)
+			setParsedData(result)
 		} catch (error) {
 			console.log("error", error)
 			setError(error.message)
@@ -105,7 +105,9 @@ export default function Home() {
 					</p>
 					<p>
 						<em>Updates: </em> {JSON.stringify(data["updates"])} */}
-						Parsed Data: {JSON.stringify(parsedData)}
+						<span>Message: {JSON.stringify(parsedData.message)}</span>
+						Parsed Data: {JSON.stringify(parsedData.data)}
+						{/* Parsed Data: {JSON.stringify(parsedData)} */}
 					</p>
 					<div>
 						<button
