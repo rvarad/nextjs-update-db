@@ -83,14 +83,14 @@ export default async function handler(req, res) {
 			.on("end", async () => {
 				if (
 					emptyResults.length > 0 ||
-					erronousResults.length > 0 ||
-					duplicateResults.length > 0
+					erronousResults.length > 0
+					// duplicateResults.length > 0
 				) {
 					fs.unlinkSync(tempFilePath)
 					return res.status(400).json({
 						message: "file contains errors",
 						data: {
-							duplicateResults,
+							// duplicateResults,
 							erronousResults,
 							emptyResults,
 						},
@@ -107,19 +107,21 @@ export default async function handler(req, res) {
 					const { count, material, quality, supplier, price } = row
 					let recordFound = false
 
-					Object.entries(knitsData).forEach(([id, data]) => {
-						if (
-							data.count === count &&
-							data.material === material &&
-							data.quality === quality &&
-							data.supplier === supplier
-						) {
-							recordFound = true
-							if (data.price !== price) {
-								updates[`knits/${id}/price`] = price
+					if (knitsData) {
+						Object.entries(knitsData).forEach(([id, data]) => {
+							if (
+								data.count === count &&
+								data.material === material &&
+								data.quality === quality &&
+								data.supplier === supplier
+							) {
+								recordFound = true
+								if (data.price !== price) {
+									updates[`knits/${id}/price`] = price
+								}
 							}
-						}
-					})
+						})
+					}
 
 					if (!recordFound) {
 						newRecords.push({
@@ -141,7 +143,7 @@ export default async function handler(req, res) {
 
 				return res.status(200).json({
 					message: "File uploaded successfully",
-					data: { newRecords, updates },
+					data: { newRecords, updates, duplicateResults },
 				})
 			})
 	} catch (error) {

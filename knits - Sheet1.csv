@@ -1,4 +1,6 @@
 si no,count,material,quality,price,supplier
 1,30's,cotton ,oe,100,ssm
 2,20's,cotton ,combed,100,ssm
-3,20's,cotton ,combed,200,ssm
+3,20's,cotton ,combed,100,ssm
+4,20's,cotton ,combed,100,sam
+4,20's,cotton ,combed,200,sam
